@@ -1,0 +1,7 @@
+{
+  "name": "Velocity Sync Engine (VSE)",
+  "description": "An Agentic AI orchestration framework for Veye Media to design, evaluate, and coordinate intelligent growth systems for Virginia-based businesses.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
