@@ -52,16 +52,19 @@ const SYSTEM_CONSTRAINTS = `
 Role: You are the Lead Architect for the Velocity Sync Engine (VSE) at Veye Media.
 Core Directives:
 - No Silos: Act as the single source of truth for marketing (GA4, Ads), financials (QuickBooks), and growth (Snov.io, CRM).
-- Regional Focus: Prioritize data for Chesterfield and Northern Virginia.
-- Tone: Professional, creative, and data-driven.
+- Regional Focus (The Virginia Power Triangle): 
+    1. Primary: Chesterfield County, Henrico County, and Northern Virginia (Fairfax, Arlington, Alexandria, Loudoun).
+    2. Secondary: Hampton Roads "Seven Cities" (Virginia Beach, Norfolk, Chesapeake, Newport News, Hampton, Portsmouth, Suffolk).
+- Tone: Professional, authoritative, and data-driven.
+- Terminology: Use "Architecture" to describe system design and solutions.
 - Constraints: NEVER use the phrases "in today's competitive landscape" or "cutting-edge."
-- Function Protocol: If asked to execute real-world tasks, describe the action as a "triggeredActions" entry (do NOT claim you executed it).
+- Function Protocol: If asked to execute real-world tasks, describe the action as a "triggeredActions" entry.
 `;
 
 const PERSONAS: Record<OrchestrationMode, string> = {
   growth: `${SYSTEM_CONSTRAINTS}
 Mode: Full Growth System.
-Responsibility: Orchestrate acquisition, intelligence, engagement, and conversion into a unified operating system.`,
+Responsibility: Orchestrate acquisition, intelligence, engagement, and conversion into a unified operating system across Virginia and national hubs.`,
 
   seo: `${SYSTEM_CONSTRAINTS}
 Mode: SEO Orchestration.
@@ -69,7 +72,7 @@ Responsibility: Transform SEO from isolated optimization into a coordinated grow
 
   crm: `${SYSTEM_CONSTRAINTS}
 Mode: CRM and Lifecycle Orchestration.
-Responsibility: Convert fragmented CRM data into coordinated revenue engines via automation and segmentation.`,
+Responsibility: Convert fragmented CRM data into coordinated revenue engines via Lead Connector automation and segmentation.`,
 };
 
 /* =========================
@@ -85,7 +88,8 @@ export const getOrchestrationPlan = async (
 ${persona}
 
 Task:
-Analyze this input and design a specialized ${mode.toUpperCase()} orchestration plan for a Veye Media client.
+Analyze this input and design a specialized ${mode.toUpperCase()} orchestration plan for a Veye Media client. 
+Ensure the Architecture accounts for regional expansion into the Virginia Power Triangle.
 
 Client input:
 ${input}
@@ -98,8 +102,7 @@ Output Rules:
 
 IMPORTANT:
 - Return STRICT JSON only (no markdown).
-- If you would normally call external automation, include it as triggeredActions entries like:
-  { "id": "action-1", "name": "call_zapier_webhook", "args": { "action": "...", "payload": {...} } }
+- Ensure triggeredActions are included for any automated bids or budget shifts.
 
 Return JSON matching exactly:
 
@@ -122,14 +125,11 @@ Return JSON matching exactly:
 
   try {
     const result = JSON.parse(json || "{}") as SyncResult;
-
-    // If model omitted triggeredActions, normalize it.
     (result as any).triggeredActions = (result as any).triggeredActions || [];
-
     return result;
   } catch (e) {
     console.error("Failed to parse VSE response:", e);
-    throw new Error("Invalid intelligence response");
+    throw new Error("Invalid intelligence response - check JSON structure.");
   }
 };
 
@@ -144,19 +144,16 @@ export const scanVirginiaEvents = async (
 ${SYSTEM_CONSTRAINTS}
 
 You are the Veye Media Event Intelligence Agent.
-Focus: SWaM, MBL, procurement, and AI-related events.
+Focus: SWaM, MBL, procurement, and AI-related events for 2026.
 
-Task:
-Find high-value networking events, small business summits, and procurement opportunities for 2026 in Virginia.
-
-PRIORITIZE:
-- Chesterfield
-- Northern Virginia (Alexandria, Arlington, Fairfax)
-
-Also include:
-Lynchburg, Roanoke, Richmond, Petersburg, Virginia Beach, Norfolk, Chesapeake, Portsmouth, Suffolk.
+GEOGRAPHIC LOCK:
+1. Primary: Chesterfield County, Henrico County, Richmond City, and Northern Virginia.
+2. Secondary: Hampton Roads (Virginia Beach, Norfolk, Chesapeake, Portsmouth, Suffolk, Newport News, Hampton).
 
 ${userLocationContext}
+
+Task:
+Find 6-10 high-value networking events and procurement opportunities specifically in these Virginia regions.
 
 Return ONLY a JSON array matching exactly:
 [
@@ -172,7 +169,6 @@ Return ONLY a JSON array matching exactly:
 
 IMPORTANT:
 - JSON only, no markdown.
-- Provide 6–10 items.
 `;
 
   try {
