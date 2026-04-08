@@ -4,6 +4,7 @@ from google import genai
 
 def handler(request):
     api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+
     if not api_key:
         return {
             "statusCode": 500,
@@ -11,7 +12,9 @@ def handler(request):
             "body": json.dumps({"error": "Missing GEMINI_API_KEY"})
         }
 
-    # Parse JSON body from the POST request
+    client = genai.Client(api_key=api_key)
+
+    # Parse JSON body from request to get the prompt
     try:
         body = json.loads(request.body or "{}")
         prompt = body.get("prompt", "")
@@ -25,17 +28,18 @@ def handler(request):
             "body": json.dumps({"error": "Missing prompt"})
         }
 
-    client = genai.Client(api_key=api_key)
-
+    # Call Gemini with the full orchestration prompt
     response = client.models.generate_content(
         model="gemini-2.5-pro",
         contents=prompt,
     )
 
-    text = getattr(response, "text", "") or ""
+    # response.text is already the JSON object you saw in DevTools.
+    # Wrap it in { "text": ... } so the TS client continues to work unchanged.
+    orchestration_json = response.text  # string
 
     return {
         "statusCode": 200,
         "headers": {"Content-Type": "application/json"},
-        "body": json.dumps({"text": text})
+        "body": json.dumps({"text": orchestration_json})
     }
