@@ -1,0 +1,5 @@
+.vercel
+.env*.local
+.env
+api/atlas-auth.json
+handshakes/atlas-auth.json
