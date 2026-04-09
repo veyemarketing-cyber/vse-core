@@ -3,26 +3,21 @@ import sys
 import json
 from http.server import BaseHTTPRequestHandler
 
-
 IMPORT_ERROR = None
 core = None
 intel = None
 
-
 # VSE ARCHITECTURE: Priority Pathing
-# This tells the Python engine to look in the current folder for our logic silos
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
-
 
 # Local .env support when available
 try:
     from dotenv import load_dotenv
     load_dotenv()
-except ImportError:
+except Exception:
     pass
-
 
 # SILO SYNTHESIS: Importing the Core and Intel
 try:
@@ -35,11 +30,11 @@ class VSEActuator:
     def __init__(self):
         if core is None or intel is None:
             raise Exception(f"Brain Sync Failed: {IMPORT_ERROR}")
+
         self.orchestrator = core.VSEOrchestrator()
         self.surgeon = intel.SearchAtlasSilo()
 
     def run_market_pivot(self, user_input=""):
-        # The engine's strategic move: Richmond cross-silo analysis
         audit_data = self.surgeon.get_richmond_audit()
 
         if not audit_data:
@@ -47,16 +42,14 @@ class VSEActuator:
                 "status": "DEGRADED",
                 "mode": "simulate",
                 "input": user_input,
+                "market": "Unknown Market",
                 "insight": "Search Atlas intel unavailable",
                 "combined_score": None,
-                "market": "Unknown Market",
                 "market_context": {},
                 "signals": [],
                 "actions": []
             }
 
-        # Demo CRM payload: proves the VSE is orchestrating silos,
-        # not just reading SEO or moving budgets blindly.
         crm_data = {
             "velocity": 0.0,
             "status": "ACTIVE_DEPLOY",
@@ -83,7 +76,6 @@ class VSEActuator:
         }
 
 
-# THE HANDSHAKE: Vercel Entry Point
 class handler(BaseHTTPRequestHandler):
     def _send_json(self, payload, status=200):
         self.send_response(status)
@@ -107,6 +99,7 @@ class handler(BaseHTTPRequestHandler):
             self._send_json({
                 "error": str(e),
                 "status": "CRITICAL_FAILURE",
+                "import_error": IMPORT_ERROR,
                 "diagnostics": sys.path
             }, 500)
         return
@@ -121,12 +114,12 @@ class handler(BaseHTTPRequestHandler):
 
             actuator = VSEActuator()
             result = actuator.run_market_pivot(user_input)
-
             self._send_json(result, 200)
         except Exception as e:
             self._send_json({
                 "error": str(e),
                 "status": "CRITICAL_FAILURE",
+                "import_error": IMPORT_ERROR,
                 "diagnostics": sys.path
             }, 500)
         return

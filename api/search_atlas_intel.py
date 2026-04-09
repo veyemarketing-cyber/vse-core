@@ -1,8 +1,11 @@
 import os
-from dotenv import load_dotenv
-
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 # VSE Silo Handshake: Connecting to the Search Atlas Vault
-load_dotenv()
+
 
 
 class SearchAtlasSilo:

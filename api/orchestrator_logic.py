@@ -1,6 +1,10 @@
 import os
 import sys
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 from google import genai
 from google.genai import types
 
