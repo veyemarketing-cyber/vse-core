@@ -5,6 +5,7 @@ import {
   History, Trash2, Heart, Quote, Wand2, Lock, Database, GitMerge, Eye, Clock, PlusCircle, ShieldAlert, Globe, Server, DollarSign, Info
 } from 'lucide-react';
 
+
 /* =========================
     VSE CORE TYPES
 ========================= */
@@ -29,12 +30,64 @@ const SCRIPTURES = [
   { text: 'So, whether you eat or drink, or whatever you do, do all to the glory of God.', ref: '1 Corinthians 10:31' }
 ];
 
+
+/* =========================
+    DONE LIST LOGIC
+========================= */
+type DoneListState = 'no_action' | 'simulate' | 'executed';
+
+const DONE_LIST_CONTENT: Record<DoneListState, { title: string; body: string }> = {
+  no_action: {
+    title: "Analysis complete — governed autonomy in observation mode.",
+    body: `The VSE evaluated CRM pipeline, SEO visibility, paid media efficiency, competitor intelligence, and market demand for this market.
+Signals show performance variance but all remain inside defined governance thresholds.
+No paid segments crossed the “spend with zero pipeline” threshold.
+No SEO topic produced enough CRM-backed demand to justify a governed budget shift.
+Result: no autonomous execution was triggered in this cycle.
+The engine continues monitoring and learning from live signals, ready to act when thresholds are exceeded.`
+  },
+  simulate: {
+    title: "Analysis complete — simulated budget reallocation path prepared.",
+    body: `The VSE ingested CRM data, SEO topic performance, paid media spend, competitor intel, and local market signals.
+It detected wasteful paid spend on low-converting generic terms with negligible CRM opportunities.
+It also detected a high-performing SEO topic generating qualified opportunities and meaningful pipeline with limited paid support.
+Governance thresholds for this environment cap budget moves per cycle and require CRM-backed demand, not clicks alone, to justify changes.
+Within those rules, the engine prepared a simulated reallocation plan:
+– Decrease budget on identified low-converting paid segments.
+– Increase budget on campaigns aligned to the high-performing SEO topic.
+– Reallocate a portion of budget from generic terms into proven, CRM-backed demand.
+Execution mode is simulation only in this demo; proposals are logged here for human review, and no live account changes were made.`
+  },
+  executed: {
+    title: "Analysis complete — governed budget adjustments executed.",
+    body: `The VSE processed a full cross-silo snapshot: CRM pipeline, SEO visibility by topic, paid media performance, competitor posture, and market demand indicators.
+It found paid segments exceeding the “spend with zero pipeline” threshold and SEO topics consistently generating high-value opportunities and pipeline.
+Governance-as-Code defined what it was allowed to touch: only campaign and keyword budgets, and only within a strict percentage band per decision cycle, with CRM-backed demand as a prerequisite.
+Within those parameters, the engine autonomously:
+– Reduced budget on specified low-converting paid segments inside the allowed adjustment range.
+– Increased budget on campaigns mapped to the high-performing SEO topic, also within the allowed range.
+– Rebalanced a portion of spend from weak generic terms into proven, CRM-backed demand.
+Every change was written into the Done List with timestamps, affected entities, before/after values, and links back to the originating signals, so the entire decision path is fully auditable.`
+  }
+};
+
+function getDoneListState(actions: any[], mode: 'simulate' | 'live'): DoneListState {
+  const hasActions = Array.isArray(actions) && actions.length > 0;
+
+  if (hasActions && mode === 'simulate') return 'simulate';
+  if (hasActions && mode === 'live') return 'executed';
+  return 'no_action';
+}
+
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'clarity' | 'sync' | 'orchestrator' | 'conductor' | 'loom' | 'actuator' | 'registry'>('clarity');
   const [syncInput, setSyncInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [statusLog, setStatusLog] = useState<LogEntry[]>([]);
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
+  const [vseResult, setVseResult] = useState<any | null>(null);
+  const mode: 'simulate' | 'live' = 'simulate';
   const [selectedArchive, setSelectedArchive] = useState<SavedReport | null>(null);
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
 
@@ -62,40 +115,54 @@ const App: React.FC = () => {
     if (lastAction && syncInput && !selectedArchive) {
       setSavedReports(prev => [{ id: Math.random().toString(36).substr(2, 9), timestamp: lastAction.timestamp, input: syncInput, report: lastAction.message }, ...prev]);
     }
-    setSyncInput(''); setStatusLog([]); setSelectedArchive(null); setActiveTab('clarity');
+    setSyncInput('');
+    setStatusLog([]);
+    setSelectedArchive(null);
+    setVseResult(null);
+    setActiveTab('clarity');
   };
 
   const handleOrchestration = async () => {
     if (!syncInput || loading) return;
+
     setLoading(true);
     setStatusLog([]);
     setSelectedArchive(null);
+    setVseResult(null);
+
     addLog(`CLARITY CORE: Engaging strategic synthesis...`, 'info');
 
     setTimeout(() => {
       addLog(`ORCHESTRATOR: Validating strategic intent...`, 'governance');
-      const isFin = /finance|profit|revenue|margin|quickbooks/i.test(syncInput);
-      const isSEO = /search|atlas|seo|visibility/i.test(syncInput);
-      const isSocial = /jasper|metricool|social|post/i.test(syncInput);
+    }, 700);
+
+    setTimeout(() => {
+      addLog(`DATA LOOM: Knowledge threads synthesized.`, 'info');
+    }, 1400);
+
+    try {
+      
+      const res = await fetch('https://YOUR-VERCEL-URL.vercel.app/api/main');
+      const data = await res.json();
+
+      setVseResult(data);
 
       setTimeout(() => {
-        let response = "Strategic Actuation Complete: ";
-        if (isFin) response += "Financial reconciliation complete. Profit margins are stabilized at 24.2%. ";
-        if (isSEO) response += "SEO optimizations for target architecture are now live. ";
-        if (isSocial) response += "Automated social content scheduled for Tuesday deployment. ";
-        if (!response.includes("complete") && !response.includes("live") && !response.includes("scheduled")) {
-          response = "Analysis complete. Strategic signals remain within established parameters.";
+        addLog(`THE CONDUCTOR: Command execution confirmed.`, 'system');
+
+        if (data?.actions?.length > 0) {
+          addLog(`ACTUATOR: Governed action path generated for review.`, 'action');
+        } else {
+          addLog(`ACTUATOR: Analysis complete. No governed action required in this cycle.`, 'action');
         }
 
-        addLog(`DATA LOOM: Knowledge threads synthesized.`, 'info');
-        setTimeout(() => {
-          addLog(`THE CONDUCTOR: Command execution confirmed.`, 'system');
-          addLog(response, 'action');
-          setLoading(false);
-          setActiveTab('actuator');
-        }, 1500);
-      }, 1000);
-    }, 1200);
+        setLoading(false);
+        setActiveTab('actuator');
+      }, 2200);
+    } catch (err: any) {
+      addLog(`SYSTEM ERROR: ${err?.message || 'Unable to reach VSE endpoint.'}`, 'system');
+      setLoading(false);
+    }
   };
 
   return (
@@ -103,7 +170,7 @@ const App: React.FC = () => {
       {/* Sidebar Architecture */}
       <aside className="w-80 border-r border-white/10 flex flex-col glass-panel shrink-0">
         <div className="p-5 flex flex-col h-full overflow-hidden">
-          
+
           {/* Brand Header */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center glow-accent shrink-0">
@@ -198,9 +265,105 @@ const App: React.FC = () => {
             <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-8">The Done List</h2>
             <div className="glass-panel p-10 rounded-[2.5rem] border-blue-500/20 bg-blue-900/5 shadow-2xl relative overflow-hidden">
                 <div className="bg-black/60 p-10 rounded-[2rem] border border-white/10 shadow-inner">
-                    <p className="text-2xl text-gray-100 leading-relaxed font-semibold">
-                      {selectedArchive ? selectedArchive.report : statusLog.find(l => l.type === 'action')?.message || "Awaiting Strategic Signal..."}
-                    </p>
+                    {(() => {
+                      if (selectedArchive) {
+                        return (
+                          <p className="text-2xl text-gray-100 leading-relaxed font-semibold">
+                            {selectedArchive.report}
+                          </p>
+                        );
+                      }
+
+                      if (!vseResult) {
+                        return (
+                          <p className="text-2xl text-gray-100 leading-relaxed font-semibold">
+                            Awaiting Strategic Signal...
+                          </p>
+                        );
+                      }
+
+                      const actions = vseResult.actions || [];
+                      const state = getDoneListState(actions, mode);
+                      const content = DONE_LIST_CONTENT[state];
+
+                      return (
+                        <div className="space-y-5">
+                          <h3 className="text-2xl font-black text-white tracking-tight">
+                            {content.title}
+                          </h3>
+
+                          <p className="text-lg text-gray-100 leading-relaxed whitespace-pre-line">
+                            {content.body}
+                          </p>
+
+                          {vseResult.market_context && (
+                            <div className="pt-6 border-t border-white/10">
+                              <p className="text-[11px] uppercase tracking-[0.3em] text-blue-400 font-black mb-4">
+                                Live Decision Context
+                              </p>
+                              <div className="grid md:grid-cols-2 gap-3 text-sm">
+                                <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                  <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">Market</p>
+                                  <p className="text-white font-semibold">{vseResult.market || 'Unknown'}</p>
+                                </div>
+                                <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                  <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">SEO Topic</p>
+                                  <p className="text-white font-semibold">{vseResult.market_context.seo_topic || 'N/A'}</p>
+                                </div>
+                                <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                  <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">SEO Visibility</p>
+                                  <p className="text-white font-semibold">{vseResult.market_context.seo_visibility_score ?? 'N/A'}</p>
+                                </div>
+                                <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                  <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">Pipeline Value</p>
+                                  <p className="text-white font-semibold">
+                                    {typeof vseResult.market_context.pipeline_value_from_seo_topic === 'number'
+                                      ? `$${vseResult.market_context.pipeline_value_from_seo_topic.toLocaleString()}`
+                                      : 'N/A'}
+                                  </p>
+                                </div>
+                                <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                  <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">Paid on Topic</p>
+                                  <p className="text-white font-semibold">
+                                    {typeof vseResult.market_context.paid_spend_on_topic === 'number'
+                                      ? `$${vseResult.market_context.paid_spend_on_topic.toLocaleString()}`
+                                      : 'N/A'}
+                                  </p>
+                                </div>
+                                <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                  <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">Paid on Other Terms</p>
+                                  <p className="text-white font-semibold">
+                                    {typeof vseResult.market_context.paid_spend_on_other_terms === 'number'
+                                      ? `$${vseResult.market_context.paid_spend_on_other_terms.toLocaleString()}`
+                                      : 'N/A'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {Array.isArray(vseResult.actions) && vseResult.actions.length > 0 && (
+                            <div className="pt-6 border-t border-white/10">
+                              <p className="text-[11px] uppercase tracking-[0.3em] text-blue-400 font-black mb-4">
+                                Proposed Action Path
+                              </p>
+                              <div className="space-y-3">
+                                {vseResult.actions.map((action: any, idx: number) => (
+                                  <div key={idx} className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                    <p className="text-white font-bold uppercase tracking-wide text-sm mb-1">
+                                      {action.action_type || 'Proposed Action'}
+                                    </p>
+                                    <p className="text-gray-300 text-sm leading-relaxed">
+                                      {action.reason || 'No rationale provided.'}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                 </div>
             </div>
           </div>
@@ -219,6 +382,7 @@ const App: React.FC = () => {
   );
 };
 
+
 /* =========================
     ACTION FEED ITEM
 ========================= */
@@ -232,7 +396,7 @@ const ActionFeedItem: React.FC<{ log: LogEntry }> = ({ log }) => {
     };
 
     return (
-        <div 
+        <div
           className="relative p-4 rounded-xl border border-white/5 bg-white/5 text-gray-400 group cursor-help transition-all hover:bg-white/10"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -250,6 +414,7 @@ const ActionFeedItem: React.FC<{ log: LogEntry }> = ({ log }) => {
         </div>
     );
 };
+
 
 /* =========================
     REFINED SIDEBAR ITEM

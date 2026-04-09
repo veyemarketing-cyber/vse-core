@@ -13,6 +13,7 @@ try:
 except ImportError:
     DataLoom = None
 
+# Load env from local vaults
 for vault_path in [".env.local", ".env", "../.env.local", "../.env"]:
     if os.path.exists(vault_path):
         load_dotenv(dotenv_path=vault_path, override=True)
@@ -38,9 +39,20 @@ class VSEOrchestrator:
 
     def evaluate_strategic_move(self, market_data, crm_data):
         if not self.client:
-            return {"error": "Orchestrator Brain Offline", "status": self.status}
+            return {
+                "status": self.status,
+                "insight": "Orchestrator Brain Offline",
+                "combined_score": None,
+                "market_context": {},
+                "signals": [],
+                "actions": [],
+            }
 
+        # --- Cross-silo synthesis via Data Loom ---
         synthesis = self.loom.weave_silos(crm_data, market_data) if self.loom else {}
+        combined_score = synthesis.get("combined_score")
+        market_context = synthesis.get("market_context", {})
+        signals = synthesis.get("signals", [])
 
         velocity = crm_data.get("velocity", 0)
         launch_context = ""
@@ -50,12 +62,16 @@ class VSEOrchestrator:
                 "Current zero velocity is an expected pre-launch state. "
             )
 
+        # --- Turn Loom output into a strategist prompt ---
         prompt = (
-            f"As the VSE Senior Strategist, analyze this synthesized context: {synthesis}. "
+            "You are the Senior Strategist inside the Velocity Sync Engine (VSE). "
+            "You see unified, cross-silo data from CRM, SEO, and paid media.\n\n"
+            f"SYNTHESIZED CONTEXT (from the Data Loom): {synthesis}\n\n"
             f"{launch_context}"
-            "Context: Veye Media targeting Richmond, Virginia. "
-            "Task: Produce a strategic recommendation with rationale, risks, and next actions. "
-            "Constraints: Do not use the phrases 'cutting-edge' or 'competitive landscape'. "
+            "Context: Veye Media targeting Richmond, Virginia.\n"
+            "Task: Produce a strategic recommendation with rationale, risks, and next actions, "
+            "explicitly referencing how SEO visibility, CRM pipeline, and paid spend interact.\n"
+            "Constraints: Do not use the phrases 'cutting-edge' or 'competitive landscape'.\n"
             "Tone: Professional, authoritative, artisanal."
         )
 
@@ -65,16 +81,46 @@ class VSEOrchestrator:
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.4,
-                    max_output_tokens=1200
+                    max_output_tokens=1200,
                 ),
             )
             strat_decision = response.text
         except Exception as e:
             strat_decision = f"Fallback: {str(e)[:200]}"
 
+        # --- Map signals to proposed actions for the Actuator / Done List ---
+        actions = []
+        for sig in signals:
+            sig_type = sig.get("type")
+            reason = sig.get("narrative")
+            if sig_type == "cross_silo_spend_no_pipeline":
+                actions.append({
+                    "action_type": "propose_budget_reduction",
+                    "target_system": "google_ads",
+                    "scope": "wasteful_campaigns_with_no_crm_pipeline",
+                    "reason": reason,
+                })
+            elif sig_type == "seo_topic_under_supported_by_paid":
+                actions.append({
+                    "action_type": "propose_budget_increase",
+                    "target_system": "google_ads",
+                    "scope": "campaigns_aligned_to_high_value_seo_topics",
+                    "reason": reason,
+                })
+            elif sig_type == "reallocate_budget_from_weak_paid_to_strong_seo":
+                actions.append({
+                    "action_type": "propose_budget_reallocation",
+                    "target_system": "google_ads",
+                    "from": "low-converting_paid_terms",
+                    "to": "campaigns_mirroring_high-performing_seo_topics",
+                    "reason": reason,
+                })
+
         return {
             "status": "PENDING_HUMAN_APPROVAL",
             "insight": strat_decision,
-            "metadata": synthesis.get("market_context") if synthesis else "No Context",
-            "launch_readiness": "READY_FOR_REVIEW"
+            "combined_score": combined_score,
+            "market_context": market_context,
+            "signals": signals,
+            "actions": actions,
         }
