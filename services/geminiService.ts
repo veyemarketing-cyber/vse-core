@@ -1,10 +1,21 @@
 import { SyncResult, VirginiaEvent, OrchestrationMode } from "../types";
 
+
 /* =========================
    Helpers
 ========================= */
 function extractJson(text: string): string {
   if (!text) return "";
+
+  const trimmed = text.trim();
+
+  // If the whole response is already valid JSON, return it directly
+  if (
+    (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+    (trimmed.startsWith("[") && trimmed.endsWith("]"))
+  ) {
+    return trimmed;
+  }
 
   const brace = text.indexOf("{");
   const bracket = text.indexOf("[");
@@ -45,6 +56,7 @@ async function callGemini(prompt: string): Promise<string> {
   return data?.text || "";
 }
 
+
 /* =========================
    Prompt constants
 ========================= */
@@ -74,6 +86,7 @@ Responsibility: Transform SEO from isolated optimization into a coordinated grow
 Mode: CRM and Lifecycle Orchestration.
 Responsibility: Convert fragmented CRM data into coordinated revenue engines via Lead Connector automation and segmentation.`,
 };
+
 
 /* =========================
    Public API (used by App.tsx)
