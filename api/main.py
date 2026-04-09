@@ -4,8 +4,8 @@ import json
 from http.server import BaseHTTPRequestHandler
 
 IMPORT_ERROR = None
-core = None
-intel = None
+VSEOrchestrator = None
+SearchAtlasSilo = None
 
 # VSE ARCHITECTURE: Priority Pathing
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -19,22 +19,23 @@ try:
 except Exception:
     pass
 
-# SILO SYNTHESIS: Importing the Core and Intel
+# SILO SYNTHESIS: Import the actual orchestrator and intel classes
 try:
-    from orchestrator_logic import core, intel
+    from orchestrator_logic import VSEOrchestrator
+    from search_atlas_intel import SearchAtlasSilo
 except Exception as e:
     IMPORT_ERROR = str(e)
 
 
 class VSEActuator:
     def __init__(self):
-        if core is None or intel is None:
+        if VSEOrchestrator is None or SearchAtlasSilo is None:
             raise Exception(f"Brain Sync Failed: {IMPORT_ERROR}")
 
-        self.orchestrator = core.VSEOrchestrator()
-        self.surgeon = intel.SearchAtlasSilo()
+        self.orchestrator = VSEOrchestrator()
+        self.surgeon = SearchAtlasSilo()
 
-    def run_market_pivot(self, user_input=""):
+    def run_market_pivot(self, user_input: str = ""):
         audit_data = self.surgeon.get_richmond_audit()
 
         if not audit_data:
@@ -47,7 +48,7 @@ class VSEActuator:
                 "combined_score": None,
                 "market_context": {},
                 "signals": [],
-                "actions": []
+                "actions": [],
             }
 
         crm_data = {
@@ -55,12 +56,12 @@ class VSEActuator:
             "status": "ACTIVE_DEPLOY",
             "opportunities_created": 2,
             "opportunities_from_seo_topic": 2,
-            "pipeline_value_from_seo_topic": 18000.0
+            "pipeline_value_from_seo_topic": 18000.0,
         }
 
         decision = self.orchestrator.evaluate_strategic_move(
             market_data=audit_data,
-            crm_data=crm_data
+            crm_data=crm_data,
         )
 
         return {
@@ -72,12 +73,12 @@ class VSEActuator:
             "combined_score": decision.get("combined_score"),
             "market_context": decision.get("market_context", {}),
             "signals": decision.get("signals", []),
-            "actions": decision.get("actions", [])
+            "actions": decision.get("actions", []),
         }
 
 
 class handler(BaseHTTPRequestHandler):
-    def _send_json(self, payload, status=200):
+    def _send_json(self, payload, status: int = 200):
         self.send_response(status)
         self.send_header("Content-type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -88,7 +89,6 @@ class handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self._send_json({"status": "OK"}, 200)
-        return
 
     def do_GET(self):
         try:
@@ -96,13 +96,15 @@ class handler(BaseHTTPRequestHandler):
             result = actuator.run_market_pivot("")
             self._send_json(result, 200)
         except Exception as e:
-            self._send_json({
-                "error": str(e),
-                "status": "CRITICAL_FAILURE",
-                "import_error": IMPORT_ERROR,
-                "diagnostics": sys.path
-            }, 500)
-        return
+            self._send_json(
+                {
+                    "error": str(e),
+                    "status": "CRITICAL_FAILURE",
+                    "import_error": IMPORT_ERROR,
+                    "diagnostics": sys.path,
+                },
+                500,
+            )
 
     def do_POST(self):
         try:
@@ -116,10 +118,12 @@ class handler(BaseHTTPRequestHandler):
             result = actuator.run_market_pivot(user_input)
             self._send_json(result, 200)
         except Exception as e:
-            self._send_json({
-                "error": str(e),
-                "status": "CRITICAL_FAILURE",
-                "import_error": IMPORT_ERROR,
-                "diagnostics": sys.path
-            }, 500)
-        return
+            self._send_json(
+                {
+                    "error": str(e),
+                    "status": "CRITICAL_FAILURE",
+                    "import_error": IMPORT_ERROR,
+                    "diagnostics": sys.path,
+                },
+                500,
+            )

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 
+
 /* =========================
     VSE CORE TYPES
 ========================= */
@@ -29,7 +30,6 @@ const SCRIPTURES = [
   { text: 'Do you see a man skillful in his work? He will stand before kings; he will not stand before obscure men.', ref: 'Proverbs 22:29' },
   { text: 'So, whether you eat or drink, or whatever you do, do all to the glory of God.', ref: '1 Corinthians 10:31' }
 ];
-
 
 /* =========================
     DONE LIST LOGIC
@@ -79,7 +79,6 @@ function getDoneListState(actions: any[], mode: 'simulate' | 'live'): DoneListSt
   return 'no_action';
 }
 
-
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'clarity' | 'sync' | 'orchestrator' | 'conductor' | 'loom' | 'actuator' | 'registry'>('clarity');
   const [syncInput, setSyncInput] = useState('');
@@ -87,7 +86,6 @@ const App: React.FC = () => {
   const [statusLog, setStatusLog] = useState<LogEntry[]>([]);
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
   const [vseResult, setVseResult] = useState<any | null>(null);
-  const mode: 'simulate' | 'live' = 'simulate';
   const [selectedArchive, setSelectedArchive] = useState<SavedReport | null>(null);
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
 
@@ -123,7 +121,7 @@ const App: React.FC = () => {
   };
 
   const handleOrchestration = async () => {
-    if (!syncInput || loading) return;
+    if (!syncInput.trim() || loading) return;
 
     setLoading(true);
     setStatusLog([]);
@@ -141,16 +139,28 @@ const App: React.FC = () => {
     }, 1400);
 
     try {
-      
-      const res = await fetch('/api/main');
+      const res = await fetch('/api/main', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          input: syncInput
+        })
+      });
+
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || 'VSE endpoint returned an error');
+      }
 
       setVseResult(data);
 
       setTimeout(() => {
         addLog(`THE CONDUCTOR: Command execution confirmed.`, 'system');
 
-        if (data?.actions?.length > 0) {
+        if (Array.isArray(data?.actions) && data.actions.length > 0) {
           addLog(`ACTUATOR: Governed action path generated for review.`, 'action');
         } else {
           addLog(`ACTUATOR: Analysis complete. No governed action required in this cycle.`, 'action');
@@ -283,6 +293,7 @@ const App: React.FC = () => {
                       }
 
                       const actions = vseResult.actions || [];
+                      const mode: 'simulate' | 'live' = vseResult?.mode === 'live' ? 'live' : 'simulate';
                       const state = getDoneListState(actions, mode);
                       const content = DONE_LIST_CONTENT[state];
 
@@ -382,7 +393,6 @@ const App: React.FC = () => {
   );
 };
 
-
 /* =========================
     ACTION FEED ITEM
 ========================= */
@@ -414,7 +424,6 @@ const ActionFeedItem: React.FC<{ log: LogEntry }> = ({ log }) => {
         </div>
     );
 };
-
 
 /* =========================
     REFINED SIDEBAR ITEM
