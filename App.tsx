@@ -142,7 +142,7 @@ const App: React.FC = () => {
 
     try {
       
-      const res = await fetch('https://YOUR-VERCEL-URL.vercel.app/api/main');
+      const res = await fetch('/api/main');
       const data = await res.json();
 
       setVseResult(data);
