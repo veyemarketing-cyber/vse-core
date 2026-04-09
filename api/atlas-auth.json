@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "veye-marketing",
+  "private_key_id": "bcf1ca39b15b535d221da41fa3a44f47099f057e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDzHiPLBEk2ipTp\nO7OItKa86KbtLXtDaoUyVGIiQlc4M/r7rrGMe3lJ2benyZJimgLNGuCvxK+Y7Dkm\naDxi9ix+DKswIwPtvV1WILP75kcFONwk5MPuller8tq8yzNIJd++6l86I41680pJ\nY6HDfaBOiQ8AmZ1tLVQzHRcoeDU6dmaMLCzgk/n4RxF+ParJFnU7vME2hN+NI77p\nrEAceC9TdpaH2Oz+tY15yArodW7R2zkFeMhWNen+FFA4dfmqS2cpL/u6Xu121I9Z\nhL0R2T5JDmE9tC/9ErFhvq10Lefuv0OxiK+pEBbv/hs5OuA8om6vMsQEX+sg+zgt\nHqAP4oupAgMBAAECggEAUR7H66hA85l3CYG5rI42qobol/AaloqW6g289thy+NZj\nUxJdvNXASTODs9Eu7oacE6r5uLxkqR59DUMvjwe8Hc0FW9j7KRsL5z6fP5h9LxFj\nZ04L0HLKyx2L/f3BXTwB9daHMsOFJDbEnUtIwQ2MbVgPMPCQ1kqPM0TsIr1FaX1M\nwiR0EPm+z/vWbJPSUglNZC9XRKeM9xSH/1W7X9VDsK2RamT+mEWF3xK4+NjMpgQZ\nVM/obJ/D1WKB5lc/HEgC3ZMaLhfk4obNGJQPn/dAUYSDnZjLR/uPCgOHExybHVAY\nvn+jLcCPeZp7Ia69Q0kegil8yxog5Bc8WQlw3vGprwKBgQD+llrXMVi9ixKjcquE\nCQaOOgDKbaBhSe5UXgGL566vch9pI1W0u4VheZcudu9elhUe2mOgTCRsdqIrAsCJ\nTBxXRh67Imbf+OmQq7tPXsW7l/w+p+1jlVeVnkAnkHT6BE60lokvXE8yZpawwG+u\neSWlmD9zjk6VU1pjKgg78yh/WwKBgQD0d34Ds72hMNeo64g8oc3k3tPVuX6JY20O\n2+KtidL+WCmJd7UA3Mfrpx43pp90pr4StklHSlq5IgN4mwAwGMu4wHHXvR6uBfSZ\nUPqQ017+OyxDZeuAPK/FJMcNSKIspeM7pWRoDmHgiXOJHleT9eeK+b3p92x3pq2R\n4zTOfPB0SwKBgQDZYVqpekoydghxJZ2L/QTq9l3setTBnZXx1d7uLeI7jm+Bn5kz\n3BZUl7TeCNH06qOYF5OPsNQ9BMMNhKkP0rw0TPw6f3Jl9azBSdGDQQIHXwwUF+Eb\n8c26REi1P6SSQpFNo2f515EMEQrEW1xBFtJtZeVv7ufsmyKHn8EuJz7CFwKBgAou\nA6BR1r6kkwZksGqd7j3ujXGj5MIB0uPAgkLpr1CKCUjBJFdh2i1U6yw0EwW/f8C1\nuH1wejClWvGluq9GCQ2rbdIm/OUQOGw99AEd3CHIAwLXdqQDYupZqrRB5wbm7Xxp\nWbH/j1HTR21ZRxpRLhAacC8S74BX/3hItsU2bKjbAoGBAMFFXak0HUV82Svwz/pp\nXZCfyMSk+g7PdIhD8VeG8aox0TsgJzTrR8Si9DZsDdxoz66CipCSB9wHNkGv8U/R\nZX8B9+dirbZKovXIA3Tf3915hRvWtRPKTDgc9KHaktKCpG+99WdwGo2oGkeySmX6\nHiqWp+hS5cYAE64CVfi86wTL\n-----END PRIVATE KEY-----\n",
+  "client_email": "vse-strategist@veye-marketing.iam.gserviceaccount.com",
+  "client_id": "114597821491648841046",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/vse-strategist%40veye-marketing.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
