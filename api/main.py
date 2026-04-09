@@ -13,15 +13,11 @@ if current_dir not in sys.path:
 
 # SILO SYNTHESIS: Importing the Core and Intel
 try:
-    # We import these directly since they are now in the same /api folder
-    import orchestrator_logic as core
-    import search_atlas_intel as intel
-    # This specific line checks for the AI library installation
-    import google.generativeai as genai
-except ImportError as e:
-    core = None
-    intel = None
-    IMPORT_ERROR = str(e)
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # In Vercel, rely on real environment variables instead of .env file
+    pass
 
 
 class VSEActuator:
