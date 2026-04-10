@@ -117,7 +117,6 @@ Every change was written into the Done List with timestamps, affected entities, 
 
 function getDoneListState(actions: VSEAction[], mode: 'simulate' | 'live'): DoneListState {
   const hasActions = Array.isArray(actions) && actions.length > 0;
-
   if (hasActions && mode === 'simulate') return 'simulate';
   if (hasActions && mode === 'live') return 'executed';
   return 'no_action';
@@ -171,7 +170,6 @@ const App: React.FC = () => {
 
   const handleNewOrchestration = () => {
     const lastAction = statusLog.find((log) => log.type === 'action');
-
     if (lastAction && syncInput && !selectedArchive) {
       setSavedReports((prev) => [
         {
@@ -183,7 +181,6 @@ const App: React.FC = () => {
         ...prev
       ]);
     }
-
     setSyncInput('');
     setStatusLog([]);
     setSelectedArchive(null);
@@ -212,19 +209,12 @@ const App: React.FC = () => {
     try {
       const res = await fetch('/api/main', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          input: syncInput
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: syncInput })
       });
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data?.error || 'VSE endpoint returned an error');
-      }
+      if (!res.ok) throw new Error(data?.error || 'VSE endpoint returned an error');
 
       setVseResult(data);
 
@@ -248,7 +238,8 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#050505] text-gray-200 font-inter">
-      <aside className="w-80 border-r border-white/10 flex flex-col glass-panel shrink-0">
+      {/* Sidebar: desktop only */}
+      <aside className="hidden lg:flex w-80 border-r border-white/10 flex-col glass-panel shrink-0">
         <div className="p-5 flex flex-col h-full overflow-hidden">
           <div className="flex flex-col gap-2 mb-8">
             <div className="shrink-0 flex items-center justify-start">
@@ -368,209 +359,318 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-6 md:p-10 relative flex flex-col bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent">
-        {activeTab === 'clarity' && (
-          <div className="max-w-6xl mx-auto w-full space-y-8 md:space-y-12 animate-in fade-in duration-1000">
-            <section className="text-center glass-panel p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] border-blue-500/20 shadow-2xl glow-accent">
-              <span
-                className={`px-4 md:px-5 py-2 bg-blue-600/10 text-blue-400 text-[10px] md:text-[11px] font-black uppercase tracking-[0.35em] md:tracking-[0.5em] rounded-full border border-blue-500/20 ${
-                  loading ? 'animate-pulse-soft' : ''
-                }`}
-              >
-                Active Autonomy Protocol
-              </span>
-
-              <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter mt-6 md:mt-8 mb-2">
-                Good Morning Victor
-              </h1>
-
-              <h2 className="text-sm md:text-base font-bold text-blue-500 uppercase tracking-[0.2em] md:tracking-[0.25em] mb-6 md:mb-8 font-mono">
-                The Architects of Active Autonomy
-              </h2>
-
-              <div className="max-w-2xl mx-auto p-6 md:p-8 rounded-3xl bg-black/60 border border-white/5">
-                <p className="text-base md:text-lg text-gray-200 font-medium italic leading-relaxed">
-                  "{dailyScripture.text}"
-                </p>
-                <p className="text-sm text-blue-500 font-black uppercase tracking-widest mt-4">
-                  — {dailyScripture.ref}
-                </p>
-              </div>
-            </section>
-
-            <div className="grid lg:grid-cols-12 gap-6 md:gap-8">
-              <div
-                className={`lg:col-span-7 p-6 md:p-8 h-[460px] md:h-[500px] flex flex-col ${
-                  loading ? 'vse-panel vse-panel--processing' : 'vse-panel'
-                }`}
-              >
-                <div className="flex items-center gap-4 mb-6 md:mb-8">
-                  <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg">
-                    <Terminal size={24} />
-                  </div>
-                  <h3 className="text-base md:text-lg font-black text-white uppercase tracking-tight leading-none">
-                    Master Input Node
-                  </h3>
-                </div>
-
-                <textarea
-                  className="w-full flex-1 bg-black/40 border border-white/5 rounded-2xl p-4 md:p-6 outline-none text-base leading-relaxed resize-none shadow-inner"
-                  placeholder="What do you want to know?"
-                  value={syncInput}
-                  onChange={(e) => setSyncInput(e.target.value)}
-                />
-
-                <button
-                  onClick={handleOrchestration}
-                  disabled={loading || !syncInput}
-                  className="mt-6 md:mt-8 py-4 md:py-5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl uppercase tracking-tighter transition-all shadow-glow"
-                >
-                  {loading ? <Loader2 className="animate-spin mx-auto" /> : 'Orchestrate Architecture'}
-                </button>
-              </div>
-
-              <div
-                className={`lg:col-span-5 p-6 md:p-8 h-[460px] md:h-[500px] flex flex-col overflow-hidden ${
-                  loading ? 'vse-panel vse-panel--processing' : 'vse-panel'
-                }`}
-              >
-                <h3 className="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-4 md:mb-6 flex items-center gap-2">
-                  <Activity size={18} className="text-blue-500" /> System Action Feed
-                </h3>
-
-                <div className="flex-1 overflow-y-auto space-y-2 md:space-y-3 font-mono text-[12px] md:text-[13px] custom-scrollbar pr-2">
-                  {statusLog.map((log) => (
-                    <ActionFeedItem key={log.id} log={log} />
-                  ))}
-                </div>
-              </div>
-            </div>
+      <main className="w-full flex-1 overflow-y-auto p-4 sm:p-5 md:p-8 lg:p-10 relative flex flex-col bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent">
+        {/* Mobile header with smaller logo */}
+        <div className="lg:hidden flex items-center justify-between mb-4 px-1">
+          <img
+            src={veyeLogo}
+            alt="Velocity Sync Engine logo"
+            className="w-[110px] h-auto object-contain"
+          />
+          <div className="text-right">
+            <p className="text-[10px] text-blue-400 font-mono tracking-[0.2em] uppercase">
+              VSE Mobile
+            </p>
+            <p className="text-[9px] text-white/50 uppercase tracking-[0.15em]">
+              Input + Actuator
+            </p>
           </div>
-        )}
+        </div>
 
-        {activeTab === 'actuator' && (
-          <div className="max-w-5xl mx-auto w-full animate-in fade-in duration-500">
-            <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase mb-6">
+        {/* Mobile: Master Input + Done List stack */}
+        <div className="lg:hidden space-y-4 mb-4">
+          <div className={`p-5 h-[360px] flex flex-col ${loading ? 'vse-panel vse-panel--processing' : 'vse-panel'}`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg">
+                <Terminal size={20} />
+              </div>
+              <h3 className="text-sm font-black text-white uppercase tracking-tight leading-none">
+                Master Input Node
+              </h3>
+            </div>
+
+            <textarea
+              className="w-full flex-1 bg-black/40 border border-white/5 rounded-2xl p-4 outline-none text-sm leading-relaxed resize-none shadow-inner"
+              placeholder="What do you want to know?"
+              value={syncInput}
+              onChange={(e) => setSyncInput(e.target.value)}
+            />
+
+            <button
+              onClick={handleOrchestration}
+              disabled={loading || !syncInput}
+              className="mt-4 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl uppercase tracking-tight transition-all shadow-glow text-sm"
+            >
+              {loading ? <Loader2 className="animate-spin mx-auto" /> : 'Orchestrate Architecture'}
+            </button>
+          </div>
+
+          <div className={`p-5 ${loading ? 'vse-panel vse-panel--processing' : 'vse-panel'}`}>
+            <h2 className="text-lg font-black text-white tracking-tighter uppercase mb-4">
               The Done List
             </h2>
 
-            <div
-              className={`p-6 md:p-8 relative overflow-hidden ${
-                loading ? 'vse-panel vse-panel--processing' : 'vse-panel'
-              }`}
-            >
-              <div className="bg-black/60 p-6 md:p-8 rounded-[1.75rem] border border-white/10 shadow-inner">
-                {(() => {
-                  if (selectedArchive) {
+            <div className="bg-black/60 p-5 rounded-[1.5rem] border border-white/10 shadow-inner">
+              {selectedArchive ? (
+                <p className="text-sm text-gray-100 leading-relaxed font-semibold">
+                  {selectedArchive.report}
+                </p>
+              ) : !vseResult ? (
+                <p className="text-sm text-gray-100 leading-relaxed font-semibold">
+                  Awaiting Strategic Signal...
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {(() => {
+                    const actions = vseResult.actions || [];
+                    const mode: 'simulate' | 'live' =
+                      vseResult?.mode === 'live' ? 'live' : 'simulate';
+                    const state = getDoneListState(actions, mode);
+                    const content = DONE_LIST_CONTENT[state];
+
                     return (
-                      <p className="text-base md:text-lg text-gray-100 leading-relaxed font-semibold">
-                        {selectedArchive.report}
-                      </p>
+                      <>
+                        <h3 className="text-base font-black text-white tracking-tight">
+                          {content.title}
+                        </h3>
+                        <p className="text-sm text-gray-100 leading-relaxed whitespace-pre-line">
+                          {content.body}
+                        </p>
+                      </>
                     );
-                  }
-
-                  if (!vseResult) {
-                    return (
-                      <p className="text-base md:text-lg text-gray-100 leading-relaxed font-semibold">
-                        Awaiting Strategic Signal...
-                      </p>
-                    );
-                  }
-
-                  const actions = vseResult.actions || [];
-                  const mode: 'simulate' | 'live' = vseResult?.mode === 'live' ? 'live' : 'simulate';
-                  const state = getDoneListState(actions, mode);
-                  const content = DONE_LIST_CONTENT[state];
-
-                  return (
-                    <div className="space-y-5">
-                      <h3 className="text-lg md:text-xl font-black text-white tracking-tight">
-                        {content.title}
-                      </h3>
-
-                      <p className="text-sm md:text-base text-gray-100 leading-relaxed whitespace-pre-line">
-                        {content.body}
-                      </p>
-
-                      {vseResult.market_context && (
-                        <div className="pt-6 border-t border-white/10">
-                          <p className="text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-blue-400 font-black mb-4">
-                            Live Decision Context
-                          </p>
-
-                          <div className="grid md:grid-cols-2 gap-3 text-sm">
-                            <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                              <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">Market</p>
-                              <p className="text-white font-semibold">{vseResult.market || 'Unknown'}</p>
-                            </div>
-
-                            <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                              <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">SEO Topic</p>
-                              <p className="text-white font-semibold">{vseResult.market_context.seo_topic || 'N/A'}</p>
-                            </div>
-
-                            <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                              <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">SEO Visibility</p>
-                              <p className="text-white font-semibold">{vseResult.market_context.seo_visibility_score ?? 'N/A'}</p>
-                            </div>
-
-                            <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                              <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">Pipeline Value</p>
-                              <p className="text-white font-semibold">
-                                {typeof vseResult.market_context.pipeline_value_from_seo_topic === 'number'
-                                  ? `$${vseResult.market_context.pipeline_value_from_seo_topic.toLocaleString()}`
-                                  : 'N/A'}
-                              </p>
-                            </div>
-
-                            <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                              <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">Paid on Topic</p>
-                              <p className="text-white font-semibold">
-                                {typeof vseResult.market_context.paid_spend_on_topic === 'number'
-                                  ? `$${vseResult.market_context.paid_spend_on_topic.toLocaleString()}`
-                                  : 'N/A'}
-                              </p>
-                            </div>
-
-                            <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                              <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">Paid on Other Terms</p>
-                              <p className="text-white font-semibold">
-                                {typeof vseResult.market_context.paid_spend_on_other_terms === 'number'
-                                  ? `$${vseResult.market_context.paid_spend_on_other_terms.toLocaleString()}`
-                                  : 'N/A'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {Array.isArray(vseResult.actions) && vseResult.actions.length > 0 && (
-                        <div className="pt-6 border-t border-white/10">
-                          <p className="text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-blue-400 font-black mb-4">
-                            Proposed Action Path
-                          </p>
-
-                          <div className="space-y-3">
-                            {vseResult.actions.map((action: VSEAction, idx: number) => (
-                              <div key={idx} className="bg-white/5 border border-white/5 rounded-xl p-4">
-                                <p className="text-white font-bold uppercase tracking-wide text-sm mb-1">
-                                  {action.action_type || 'Proposed Action'}
-                                </p>
-                                <p className="text-gray-300 text-sm leading-relaxed">
-                                  {action.reason || 'No rationale provided.'}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
+                  })()}
+                </div>
+              )}
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Desktop: Clarity view (hero + input + feed) */}
+        <div className="hidden lg:block">
+          {activeTab === 'clarity' && (
+            <div className="max-w-6xl mx-auto w-full space-y-8 md:space-y-12 animate-in fade-in duration-1000">
+              <section className="hidden lg:block text-center glass-panel p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] border-blue-500/20 shadow-2xl glow-accent">
+                <span
+                  className={`px-4 md:px-5 py-2 bg-blue-600/10 text-blue-400 text-[10px] md:text-[11px] font-black uppercase tracking-[0.35em] md:tracking-[0.5em] rounded-full border border-blue-500/20 ${
+                    loading ? 'animate-pulse-soft' : ''
+                  }`}
+                >
+                  Active Autonomy Protocol
+                </span>
+
+                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter mt-6 md:mt-8 mb-2">
+                  Good Morning Victor
+                </h1>
+
+                <h2 className="text-sm md:text-base font-bold text-blue-500 uppercase tracking-[0.2em] md:tracking-[0.25em] mb-6 md:mb-8 font-mono">
+                  The Architects of Active Autonomy
+                </h2>
+
+                <div className="max-w-2xl mx-auto p-6 md:p-8 rounded-3xl bg-black/60 border border-white/5">
+                  <p className="text-base md:text-lg text-gray-200 font-medium italic leading-relaxed">
+                    "{dailyScripture.text}"
+                  </p>
+                  <p className="text-sm text-blue-500 font-black uppercase tracking-widest mt-4">
+                    — {dailyScripture.ref}
+                  </p>
+                </div>
+              </section>
+
+              <div className="grid lg:grid-cols-12 gap-6 md:gap-8">
+                <div
+                  className={`lg:col-span-7 p-6 md:p-8 h-[460px] md:h-[500px] flex flex-col ${
+                    loading ? 'vse-panel vse-panel--processing' : 'vse-panel'
+                  }`}
+                >
+                  <div className="flex items-center gap-4 mb-6 md:mb-8">
+                    <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg">
+                      <Terminal size={24} />
+                    </div>
+                    <h3 className="text-base md:text-lg font-black text-white uppercase tracking-tight leading-none">
+                      Master Input Node
+                    </h3>
+                  </div>
+
+                  <textarea
+                    className="w-full flex-1 bg-black/40 border border-white/5 rounded-2xl p-4 md:p-6 outline-none text-base leading-relaxed resize-none shadow-inner"
+                    placeholder="What do you want to know?"
+                    value={syncInput}
+                    onChange={(e) => setSyncInput(e.target.value)}
+                  />
+
+                  <button
+                    onClick={handleOrchestration}
+                    disabled={loading || !syncInput}
+                    className="mt-6 md:mt-8 py-4 md:py-5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl uppercase tracking-tighter transition-all shadow-glow"
+                  >
+                    {loading ? <Loader2 className="animate-spin mx-auto" /> : 'Orchestrate Architecture'}
+                  </button>
+                </div>
+
+                <div
+                  className={`lg:col-span-5 p-6 md:p-8 h-[460px] md:h-[500px] flex flex-col overflow-hidden ${
+                    loading ? 'vse-panel vse-panel--processing' : 'vse-panel'
+                  }`}
+                >
+                  <h3 className="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-4 md:mb-6 flex items-center gap-2">
+                    <Activity size={18} className="text-blue-500" /> System Action Feed
+                  </h3>
+
+                  <div className="flex-1 overflow-y-auto space-y-2 md:space-y-3 font-mono text-[12px] md:text-[13px] custom-scrollbar pr-2">
+                    {statusLog.map((log) => (
+                      <ActionFeedItem key={log.id} log={log} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop: Actuator view */}
+        <div className="hidden lg:block">
+          {activeTab === 'actuator' && (
+            <div className="max-w-5xl mx-auto w-full animate-in fade-in duration-500">
+              <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase mb-6">
+                The Done List
+              </h2>
+
+              <div
+                className={`p-6 md:p-8 relative overflow-hidden ${
+                  loading ? 'vse-panel vse-panel--processing' : 'vse-panel'
+                }`}
+              >
+                <div className="bg-black/60 p-6 md:p-8 rounded-[1.75rem] border border-white/10 shadow-inner">
+                  {(() => {
+                    if (selectedArchive) {
+                      return (
+                        <p className="text-base md:text-lg text-gray-100 leading-relaxed font-semibold">
+                          {selectedArchive.report}
+                        </p>
+                      );
+                    }
+
+                    if (!vseResult) {
+                      return (
+                        <p className="text-base md:text-lg text-gray-100 leading-relaxed font-semibold">
+                          Awaiting Strategic Signal...
+                        </p>
+                      );
+                    }
+
+                    const actions = vseResult.actions || [];
+                    const mode: 'simulate' | 'live' = vseResult?.mode === 'live' ? 'live' : 'simulate';
+                    const state = getDoneListState(actions, mode);
+                    const content = DONE_LIST_CONTENT[state];
+
+                    return (
+                      <div className="space-y-5">
+                        <h3 className="text-lg md:text-xl font-black text-white tracking-tight">
+                          {content.title}
+                        </h3>
+
+                        <p className="text-sm md:text-base text-gray-100 leading-relaxed whitespace-pre-line">
+                          {content.body}
+                        </p>
+
+                        {vseResult.market_context && (
+                          <div className="pt-6 border-t border-white/10">
+                            <p className="text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-blue-400 font-black mb-4">
+                              Live Decision Context
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-3 text-sm">
+                              <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">
+                                  Market
+                                </p>
+                                <p className="text-white font-semibold">
+                                  {vseResult.market || 'Unknown'}
+                                </p>
+                              </div>
+
+                              <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">
+                                  SEO Topic
+                                </p>
+                                <p className="text-white font-semibold">
+                                  {vseResult.market_context.seo_topic || 'N/A'}
+                                </p>
+                              </div>
+
+                              <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">
+                                  SEO Visibility
+                                </p>
+                                <p className="text-white font-semibold">
+                                  {vseResult.market_context.seo_visibility_score ?? 'N/A'}
+                                </p>
+                              </div>
+
+                              <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">
+                                  Pipeline Value
+                                </p>
+                                <p className="text-white font-semibold">
+                                  {typeof vseResult.market_context.pipeline_value_from_seo_topic === 'number'
+                                    ? `$${vseResult.market_context.pipeline_value_from_seo_topic.toLocaleString()}`
+                                    : 'N/A'}
+                                </p>
+                              </div>
+
+                              <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">
+                                  Paid on Topic
+                                </p>
+                                <p className="text-white font-semibold">
+                                  {typeof vseResult.market_context.paid_spend_on_topic === 'number'
+                                    ? `$${vseResult.market_context.paid_spend_on_topic.toLocaleString()}`
+                                    : 'N/A'}
+                                </p>
+                              </div>
+
+                              <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                <p className="text-gray-500 uppercase text-[10px] tracking-widest mb-1">
+                                  Paid on Other Terms
+                                </p>
+                                <p className="text-white font-semibold">
+                                  {typeof vseResult.market_context.paid_spend_on_other_terms === 'number'
+                                    ? `$${vseResult.market_context.paid_spend_on_other_terms.toLocaleString()}`
+                                    : 'N/A'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {Array.isArray(vseResult.actions) && vseResult.actions.length > 0 && (
+                          <div className="pt-6 border-t border-white/10">
+                            <p className="text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-blue-400 font-black mb-4">
+                              Proposed Action Path
+                            </p>
+
+                            <div className="space-y-3">
+                              {vseResult.actions.map((action: VSEAction, idx: number) => (
+                                <div key={idx} className="bg-white/5 border border-white/5 rounded-xl p-4">
+                                  <p className="text-white font-bold uppercase tracking-wide text-sm mb-1">
+                                    {action.action_type || 'Proposed Action'}
+                                  </p>
+                                  <p className="text-gray-300 text-sm leading-relaxed">
+                                    {action.reason || 'No rationale provided.'}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
       <style>{`
