@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import {
-  LayoutDashboard, Search, Cpu, BarChart3, MapPin, ChevronRight, ShieldCheck,
-  Zap, Loader2, Users, LineChart, Target, Layers, Activity, Terminal, Webhook,
-  History, Trash2, Heart, Quote, Wand2, Lock, Database, GitMerge, Eye, Clock, PlusCircle, ShieldAlert, Globe, Server, DollarSign, Info
-} from 'lucide-react';
-
+  Cpu, ShieldCheck,
+  Zap, Loader2, Activity, Terminal, 
+  History, GitMerge, Eye, Clock, PlusCircle, ShieldAlert} from 'lucide-react';
+import veyeLogo from './assets/logo/VSE-Logo-2026-.png';
 
 /* =========================
     VSE CORE TYPES
@@ -219,15 +218,19 @@ const App: React.FC = () => {
         <div className="p-5 flex flex-col h-full overflow-hidden">
 
           {/* Brand Header */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center glow-accent shrink-0">
-              <Cpu className="text-white" size={22} />
-            </div>
-            <div>
-              <h1 className="text-lg font-black text-white leading-none tracking-tighter uppercase">VSE CORE</h1>
-              <p className="text-[9px] text-blue-400 font-mono tracking-widest uppercase mt-0.5">Command Layer</p>
-            </div>
-          </div>
+         <div className="flex items-center gap-3 mb-8">
+  <div className="shrink-0 flex items-center justify-start w-[100px] h-[34px]">
+    <img
+      src={veyeLogo}
+      alt="Velocity Sync Engine logo"
+      className="w-[100px] h-[34px] object-contain"
+    />
+  </div>
+  <div>
+    <h1 className="text-lg font-black text-white leading-none tracking-tighter uppercase">VSE CORE</h1>
+    <p className="text-[9px] text-blue-400 font-mono tracking-widest uppercase mt-0.5">Command Layer</p>
+  </div>
+</div>
 
           <button onClick={handleNewOrchestration} className="w-full flex items-center justify-center gap-2 py-3 mb-6 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 font-black text-[10px] uppercase tracking-widest transition-all shadow-glow">
             <PlusCircle size={16} /> New Orchestration
