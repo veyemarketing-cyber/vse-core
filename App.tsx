@@ -1,10 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Cpu, ShieldCheck,
-  Zap, Loader2, Activity, Terminal, 
-  History, GitMerge, Eye, Clock, PlusCircle, ShieldAlert} from 'lucide-react';
 import veyeLogo from './assets/logo/VSE-Logo-2026-.png';
-
+import {
+  ShieldCheck,
+  Zap,
+  Loader2,
+  Activity,
+  Terminal,
+  History,
+  GitMerge,
+  Eye,
+  Clock,
+  PlusCircle,
+  ShieldAlert,
+} from 'lucide-react';
 /* =========================
     VSE CORE TYPES
 ========================= */
@@ -217,19 +225,19 @@ const App: React.FC = () => {
       <aside className="w-80 border-r border-white/10 flex flex-col glass-panel shrink-0">
         <div className="p-5 flex flex-col h-full overflow-hidden">
 
-          {/* Brand Header */}
-         <div className="flex items-center gap-3 mb-8">
-  <div className="shrink-0 flex items-center justify-start w-[100px] h-[34px]">
+         {/* Brand Header */}
+{/* Brand Header */}
+<div className="flex flex-col gap-2 mb-8">
+  <div className="shrink-0 flex items-center justify-start">
     <img
       src={veyeLogo}
       alt="Velocity Sync Engine logo"
       className="w-[100px] h-[34px] object-contain"
     />
   </div>
-  <div>
-    <h1 className="text-lg font-black text-white leading-none tracking-tighter uppercase">VSE CORE</h1>
-    <p className="text-[9px] text-blue-400 font-mono tracking-widest uppercase mt-0.5">Command Layer</p>
-  </div>
+  <p className="text-[9px] text-blue-400 font-mono tracking-[0.35em] uppercase">
+    Veye Media · Velocity Sync Engine
+  </p>
 </div>
 
           <button onClick={handleNewOrchestration} className="w-full flex items-center justify-center gap-2 py-3 mb-6 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 font-black text-[10px] uppercase tracking-widest transition-all shadow-glow">
