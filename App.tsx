@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 
 
-
 /* =========================
     VSE CORE TYPES
 ========================= */
@@ -24,12 +23,50 @@ interface SavedReport {
   report: string;
 }
 
+type VSESignal = {
+  type: string;
+  severity: string;
+  narrative: string;
+  recommended_action?: string;
+};
+
+type VSEAction = {
+  action_type: string;
+  target_system: string;
+  scope?: string;
+  from?: string;
+  to?: string;
+  reason: string;
+};
+
+type VSEResult = {
+  status: string;
+  mode: 'simulate' | 'live';
+  input: string;
+  market: string;
+  insight: string | null;
+  combined_score: number | null;
+  market_context: {
+    location?: string;
+    seo_topic?: string;
+    seo_visibility_score?: number;
+    paid_spend_on_topic?: number;
+    paid_spend_on_other_terms?: number;
+    opportunities_created?: number;
+    opportunities_from_seo_topic?: number;
+    pipeline_value_from_seo_topic?: number;
+  };
+  signals: VSESignal[];
+  actions: VSEAction[];
+};
+
 const SCRIPTURES = [
   { text: 'Commit your work to the Lord, and your plans will be established.', ref: 'Proverbs 16:3' },
   { text: 'Whatever you do, work heartily, as for the Lord and not for men.', ref: 'Colossians 3:23' },
   { text: 'Do you see a man skillful in his work? He will stand before kings; he will not stand before obscure men.', ref: 'Proverbs 22:29' },
   { text: 'So, whether you eat or drink, or whatever you do, do all to the glory of God.', ref: '1 Corinthians 10:31' }
 ];
+
 
 /* =========================
     DONE LIST LOGIC
@@ -71,7 +108,7 @@ Every change was written into the Done List with timestamps, affected entities, 
   }
 };
 
-function getDoneListState(actions: any[], mode: 'simulate' | 'live'): DoneListState {
+function getDoneListState(actions: VSEAction[], mode: 'simulate' | 'live'): DoneListState {
   const hasActions = Array.isArray(actions) && actions.length > 0;
 
   if (hasActions && mode === 'simulate') return 'simulate';
@@ -85,7 +122,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [statusLog, setStatusLog] = useState<LogEntry[]>([]);
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
-  const [vseResult, setVseResult] = useState<any | null>(null);
+  const [vseResult, setVseResult] = useState<VSEResult | null>(null);
   const [selectedArchive, setSelectedArchive] = useState<SavedReport | null>(null);
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
 
@@ -359,7 +396,7 @@ const App: React.FC = () => {
                                 Proposed Action Path
                               </p>
                               <div className="space-y-3">
-                                {vseResult.actions.map((action: any, idx: number) => (
+                                {vseResult.actions.map((action: VSEAction, idx: number) => (
                                   <div key={idx} className="bg-white/5 border border-white/5 rounded-xl p-4">
                                     <p className="text-white font-bold uppercase tracking-wide text-sm mb-1">
                                       {action.action_type || 'Proposed Action'}
@@ -393,6 +430,7 @@ const App: React.FC = () => {
   );
 };
 
+
 /* =========================
     ACTION FEED ITEM
 ========================= */
@@ -424,6 +462,7 @@ const ActionFeedItem: React.FC<{ log: LogEntry }> = ({ log }) => {
         </div>
     );
 };
+
 
 /* =========================
     REFINED SIDEBAR ITEM
