@@ -232,7 +232,7 @@ const App: React.FC = () => {
     <img
       src={veyeLogo}
       alt="Velocity Sync Engine logo"
-      className="w-[100px] h-[34px] object-contain"
+      className="w-[200px] h-[69px] object-contain"
     />
   </div>
   <p className="text-[9px] text-blue-400 font-mono tracking-[0.35em] uppercase">
