@@ -13,6 +13,9 @@ import {
   PlusCircle,
   ShieldAlert,
 } from 'lucide-react';
+import { Download } from 'lucide-react';
+import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
+import ExcelJS from 'exceljs';
 
 /* =========================
     VSE CORE TYPES
@@ -50,6 +53,7 @@ type VSEAction = {
 type VSEResult = {
   status: string;
   mode: 'simulate' | 'live';
+  app_mode?: 'demo' | 'internal' | 'live';
   input: string;
   market: string;
   insight: string | null;
@@ -236,6 +240,287 @@ const App: React.FC = () => {
     }
   };
 
+  const makeSafeFileName = (value: string) => {
+    return value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60);
+  };
+
+  const triggerBrowserDownload = (blob: Blob, fileName: string) => {
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadWord = async () => {
+    if (!vseResult) {
+      addLog('EXPORT: No Actuator result available for Word export.', 'system');
+      return;
+    }
+
+    try {
+      const actions = vseResult.actions || [];
+      const mode: 'simulate' | 'live' = vseResult.mode === 'live' ? 'live' : 'simulate';
+      const state = getDoneListState(actions, mode);
+      const content = DONE_LIST_CONTENT[state];
+      const market = vseResult.market || 'Unknown Market';
+      const appMode = (vseResult.app_mode || 'demo').toUpperCase();
+      const marketContext = vseResult.market_context || {};
+
+      const actionParagraphs =
+        actions.length > 0
+          ? actions.flatMap((action, index) => [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `${index + 1}. ${action.action_type || 'Proposed Action'}`,
+                    bold: true
+                  })
+                ]
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun(`Target System: ${action.target_system || 'N/A'}`)
+                ]
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun(`Reason: ${action.reason || 'No rationale provided.'}`)
+                ]
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun(
+                    `Scope: ${action.scope || 'N/A'} | From: ${action.from || 'N/A'} | To: ${action.to || 'N/A'}`
+                  )
+                ]
+              }),
+              new Paragraph({ text: '' })
+            ])
+          : [new Paragraph('No governed action items were generated in this cycle.')];
+
+      const signalParagraphs =
+        Array.isArray(vseResult.signals) && vseResult.signals.length > 0
+          ? vseResult.signals.flatMap((signal, index) => [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `${index + 1}. ${signal.type || 'Signal'} (${signal.severity || 'N/A'})`,
+                    bold: true
+                  })
+                ]
+              }),
+              new Paragraph(signal.narrative || 'No narrative provided.'),
+              new Paragraph(`Recommended Action: ${signal.recommended_action || 'N/A'}`),
+              new Paragraph({ text: '' })
+            ])
+          : [new Paragraph('No structured signals were returned for this cycle.')];
+
+      const doc = new Document({
+        sections: [
+          {
+            children: [
+              new Paragraph({
+                text: 'Velocity Sync Engine Actuator Export',
+                heading: HeadingLevel.TITLE
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Market: `, bold: true }),
+                  new TextRun(market)
+                ]
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Execution Mode: `, bold: true }),
+                  new TextRun(mode.toUpperCase())
+                ]
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `App Mode: `, bold: true }),
+                  new TextRun(appMode)
+                ]
+              }),
+              new Paragraph({ text: '' }),
+
+              new Paragraph({
+                text: 'Done List Summary',
+                heading: HeadingLevel.HEADING_1
+              }),
+              new Paragraph({
+                children: [new TextRun({ text: content.title, bold: true })]
+              }),
+              ...content.body.split('\n').map((line) => new Paragraph(line)),
+              new Paragraph({ text: '' }),
+
+              new Paragraph({
+                text: 'Live Decision Context',
+                heading: HeadingLevel.HEADING_1
+              }),
+              new Paragraph(`SEO Topic: ${marketContext.seo_topic || 'N/A'}`),
+              new Paragraph(`SEO Visibility Score: ${marketContext.seo_visibility_score ?? 'N/A'}`),
+              new Paragraph(`Paid Spend on Topic: ${marketContext.paid_spend_on_topic ?? 'N/A'}`),
+              new Paragraph(`Paid Spend on Other Terms: ${marketContext.paid_spend_on_other_terms ?? 'N/A'}`),
+              new Paragraph(`Opportunities Created: ${marketContext.opportunities_created ?? 'N/A'}`),
+              new Paragraph(`Opportunities from SEO Topic: ${marketContext.opportunities_from_seo_topic ?? 'N/A'}`),
+              new Paragraph(`Pipeline Value from SEO Topic: ${marketContext.pipeline_value_from_seo_topic ?? 'N/A'}`),
+              new Paragraph({ text: '' }),
+
+              new Paragraph({
+                text: 'Proposed Action Path',
+                heading: HeadingLevel.HEADING_1
+              }),
+              ...actionParagraphs,
+
+              new Paragraph({
+                text: 'Signals',
+                heading: HeadingLevel.HEADING_1
+              }),
+              ...signalParagraphs
+            ]
+          }
+        ]
+      });
+
+      const blob = await Packer.toBlob(doc);
+      const stamp = new Date().toISOString().slice(0, 10);
+      triggerBrowserDownload(blob, `vse-actuator-${makeSafeFileName(market)}-${stamp}.docx`);
+      addLog('EXPORT: Word document downloaded successfully.', 'action');
+    } catch (err: any) {
+      addLog(`EXPORT ERROR: ${err?.message || 'Word export failed.'}`, 'system');
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    if (!vseResult) {
+      addLog('EXPORT: No Actuator result available for Excel export.', 'system');
+      return;
+    }
+
+    try {
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'Velocity Sync Engine';
+      workbook.created = new Date();
+
+      const summarySheet = workbook.addWorksheet('Summary');
+      summarySheet.columns = [
+        { header: 'Field', key: 'field', width: 32 },
+        { header: 'Value', key: 'value', width: 48 }
+      ];
+
+      const actions = vseResult.actions || [];
+      const mode: 'simulate' | 'live' = vseResult.mode === 'live' ? 'live' : 'simulate';
+      const state = getDoneListState(actions, mode);
+      const content = DONE_LIST_CONTENT[state];
+      const marketContext = vseResult.market_context || {};
+
+      summarySheet.addRows([
+        { field: 'Status', value: vseResult.status || 'N/A' },
+        { field: 'Mode', value: vseResult.mode || 'N/A' },
+        { field: 'App Mode', value: vseResult.app_mode || 'demo' },
+        { field: 'Market', value: vseResult.market || 'Unknown' },
+        { field: 'Insight', value: vseResult.insight || 'N/A' },
+        { field: 'Combined Score', value: vseResult.combined_score ?? 'N/A' },
+        { field: 'Done List Title', value: content.title },
+        { field: 'Done List Body', value: content.body },
+        { field: 'SEO Topic', value: marketContext.seo_topic || 'N/A' },
+        { field: 'SEO Visibility Score', value: marketContext.seo_visibility_score ?? 'N/A' },
+        { field: 'Paid Spend on Topic', value: marketContext.paid_spend_on_topic ?? 'N/A' },
+        { field: 'Paid Spend on Other Terms', value: marketContext.paid_spend_on_other_terms ?? 'N/A' },
+        { field: 'Opportunities Created', value: marketContext.opportunities_created ?? 'N/A' },
+        { field: 'Opportunities from SEO Topic', value: marketContext.opportunities_from_seo_topic ?? 'N/A' },
+        { field: 'Pipeline Value from SEO Topic', value: marketContext.pipeline_value_from_seo_topic ?? 'N/A' }
+      ]);
+
+      const actionsSheet = workbook.addWorksheet('Actions');
+      actionsSheet.columns = [
+        { header: 'Action Type', key: 'action_type', width: 24 },
+        { header: 'Target System', key: 'target_system', width: 24 },
+        { header: 'Scope', key: 'scope', width: 20 },
+        { header: 'From', key: 'from', width: 16 },
+        { header: 'To', key: 'to', width: 16 },
+        { header: 'Reason', key: 'reason', width: 64 }
+      ];
+
+      if (Array.isArray(vseResult.actions) && vseResult.actions.length > 0) {
+        vseResult.actions.forEach((action) => {
+          actionsSheet.addRow({
+            action_type: action.action_type || 'N/A',
+            target_system: action.target_system || 'N/A',
+            scope: action.scope || 'N/A',
+            from: action.from || 'N/A',
+            to: action.to || 'N/A',
+            reason: action.reason || 'No rationale provided.'
+          });
+        });
+      } else {
+        actionsSheet.addRow({
+          action_type: 'No Actions',
+          target_system: 'N/A',
+          scope: 'N/A',
+          from: 'N/A',
+          to: 'N/A',
+          reason: 'No governed action items were generated in this cycle.'
+        });
+      }
+
+      const signalsSheet = workbook.addWorksheet('Signals');
+      signalsSheet.columns = [
+        { header: 'Type', key: 'type', width: 24 },
+        { header: 'Severity', key: 'severity', width: 16 },
+        { header: 'Narrative', key: 'narrative', width: 70 },
+        { header: 'Recommended Action', key: 'recommended_action', width: 40 }
+      ];
+
+      if (Array.isArray(vseResult.signals) && vseResult.signals.length > 0) {
+        vseResult.signals.forEach((signal) => {
+          signalsSheet.addRow({
+            type: signal.type || 'N/A',
+            severity: signal.severity || 'N/A',
+            narrative: signal.narrative || 'No narrative provided.',
+            recommended_action: signal.recommended_action || 'N/A'
+          });
+        });
+      } else {
+        signalsSheet.addRow({
+          type: 'No Signals',
+          severity: 'N/A',
+          narrative: 'No structured signals were returned for this cycle.',
+          recommended_action: 'N/A'
+        });
+      }
+
+      [summarySheet, actionsSheet, signalsSheet].forEach((sheet) => {
+        const headerRow = sheet.getRow(1);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF2563EB' }
+        };
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+
+      const stamp = new Date().toISOString().slice(0, 10);
+      triggerBrowserDownload(blob, `vse-actuator-${makeSafeFileName(vseResult.market || 'market')}-${stamp}.xlsx`);
+      addLog('EXPORT: Excel workbook downloaded successfully.', 'action');
+    } catch (err: any) {
+      addLog(`EXPORT ERROR: ${err?.message || 'Excel export failed.'}`, 'system');
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#050505] text-gray-200 font-inter">
       {/* Sidebar: desktop only */}
@@ -406,9 +691,35 @@ const App: React.FC = () => {
           </div>
 
           <div className={`p-5 ${loading ? 'vse-panel vse-panel--processing' : 'vse-panel'}`}>
-            <h2 className="text-lg font-black text-white tracking-tighter uppercase mb-4">
-              The Done List
-            </h2>
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <h2 className="text-lg font-black text-white tracking-tighter uppercase">
+                The Done List
+              </h2>
+
+              {!selectedArchive && vseResult && (
+                <div className="flex flex-col items-end gap-2">
+                  <span className="mode-pill">
+                    {(vseResult.app_mode || 'demo').toUpperCase()} MODE
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleDownloadWord}
+                      className="export-btn export-btn--primary"
+                    >
+                      <Download size={14} />
+                      <span>Word</span>
+                    </button>
+                    <button
+                      onClick={handleDownloadExcel}
+                      className="export-btn export-btn--secondary"
+                    >
+                      <Download size={14} />
+                      <span>Excel</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="bg-black/60 p-5 rounded-[1.5rem] border border-white/10 shadow-inner">
               {selectedArchive ? (
@@ -531,9 +842,39 @@ const App: React.FC = () => {
         <div className="hidden lg:block">
           {activeTab === 'actuator' && (
             <div className="max-w-5xl mx-auto w-full animate-in fade-in duration-500">
-              <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase mb-6">
-                The Done List
-              </h2>
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase">
+                    The Done List
+                  </h2>
+                </div>
+
+                {!selectedArchive && vseResult && (
+                  <div className="flex flex-col md:items-end gap-3">
+                    <span className="mode-pill">
+                      {(vseResult.app_mode || 'demo').toUpperCase()} MODE
+                    </span>
+
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={handleDownloadWord}
+                        className="export-btn export-btn--primary"
+                      >
+                        <Download size={16} />
+                        <span>Download Word</span>
+                      </button>
+
+                      <button
+                        onClick={handleDownloadExcel}
+                        className="export-btn export-btn--secondary"
+                      >
+                        <Download size={16} />
+                        <span>Download Excel</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div
                 className={`p-6 md:p-8 relative overflow-hidden ${
@@ -742,6 +1083,71 @@ const App: React.FC = () => {
 
         .vse-panel--processing {
           animation: orchestrationPulse 2s ease-in-out infinite;
+        }
+
+        .mode-pill {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.55rem 0.9rem;
+          border-radius: 999px;
+          border: 1px solid rgba(59, 130, 246, 0.4);
+          background: rgba(37, 99, 235, 0.12);
+          color: #93c5fd;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 0.28em;
+          text-transform: uppercase;
+          box-shadow: 0 0 18px rgba(59, 130, 246, 0.18);
+        }
+
+        .export-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.55rem;
+          border-radius: 0.9rem;
+          padding: 0.85rem 1rem;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          transition: all 180ms ease;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .export-btn:hover {
+          transform: translateY(-1px);
+        }
+
+        .export-btn--primary {
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(59, 130, 246, 0.78));
+          color: white;
+          box-shadow:
+            0 0 22px rgba(59, 130, 246, 0.45),
+            0 0 42px rgba(59, 130, 246, 0.18);
+        }
+
+        .export-btn--primary:hover {
+          background: linear-gradient(135deg, rgba(59, 130, 246, 1), rgba(96, 165, 250, 0.85));
+          box-shadow:
+            0 0 26px rgba(59, 130, 246, 0.55),
+            0 0 50px rgba(59, 130, 246, 0.22);
+        }
+
+        .export-btn--secondary {
+          background: rgba(255, 255, 255, 0.06);
+          color: #dbeafe;
+          border: 1px solid rgba(96, 165, 250, 0.28);
+          box-shadow:
+            0 0 18px rgba(59, 130, 246, 0.18),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+        }
+
+        .export-btn--secondary:hover {
+          background: rgba(59, 130, 246, 0.12);
+          box-shadow:
+            0 0 24px rgba(59, 130, 246, 0.26),
+            inset 0 0 0 1px rgba(147, 197, 253, 0.08);
         }
       `}</style>
     </div>
