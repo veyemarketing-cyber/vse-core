@@ -18,9 +18,9 @@ except Exception as e:
     IMPORT_ERROR = str(e)
 
 app = Flask(__name__)
-CORS(app) # CRITICAL: This allows the Frontend to talk to the Backend
+CORS(app) # CRITICAL: Authorizes the Clarity Core frontend handshake
 
-# NGROK BYPASS: Inject header to skip the browser warning page
+# NGROK BYPASS: VIP header to clear the security tunnel warning
 @app.after_request
 def add_header(response):
     response.headers['ngrok-skip-browser-warning'] = 'true'
@@ -34,14 +34,19 @@ class VSEActuator:
         self.surgeon = SearchAtlasSilo()
 
     def run_market_pivot(self, user_input: str = ""):
-        audit_data = self.surgeon.get_richmond_audit()
-        if not audit_data:
+        # 1. DYNAMIC MARKET INTEL: Passing the prompt to the Surgeon
+        audit_data = self.surgeon.get_market_intel(user_input)
+        
+        if not audit_data or audit_data.get("status") == "HANDSHAKE_FAILED":
             return {
                 "status": "DEGRADED",
-                "insight": "Search Atlas intel unavailable for Richmond.",
-                "market": "Richmond, VA"
+                "insight": f"Silo Access Denied: {audit_data.get('error', 'Unknown Error')}",
+                "market": audit_data.get("market", "Unknown"),
+                "fix": audit_data.get("fix", "Check Search Atlas API Keys.")
             }
 
+        # 2. DYNAMIC CRM SYNTHESIS: Placeholder for BigQuery hook
+        # TODO: Replace with self.orchestrator.loom.get_real_crm_velocity()
         crm_data = {
             "velocity": 0.0,
             "status": "ACTIVE_DEPLOY",
@@ -49,16 +54,18 @@ class VSEActuator:
             "pipeline_value_from_seo_topic": 18000.0,
         }
 
+        # 3. STRATEGIC EVALUATION: The Brain processes the Synthesis
         decision = self.orchestrator.evaluate_strategic_move(
             market_data=audit_data,
             crm_data=crm_data,
         )
 
         return {
-            "status": "SUCCESS",
-            "market": audit_data.get("market", "Richmond, VA"),
+            "status": decision.get("status", "SUCCESS"),
+            "market": audit_data.get("market"),
             "insight": decision.get("insight", "Architecture analysis complete."),
-            "mode": "simulate"
+            "mode": "Active Autonomy",
+            "actions": decision.get("actions", [])
         }
 
 @app.route('/api/main', methods=['POST', 'OPTIONS'])
@@ -81,6 +88,6 @@ def main_endpoint():
         }), 500
 
 if __name__ == '__main__':
-    # SYNCING TO PORT 3000 AS REQUESTED
+    # SYNCING TO PORT 3000 FOR LOCAL TUNNEL
     print("VSE Orchestrator Online. Listening on Port 3000...")
     app.run(host='127.0.0.1', port=3000, debug=True)

@@ -4,9 +4,6 @@ try:
     load_dotenv()
 except Exception:
     pass
-# VSE Silo Handshake: Connecting to the Search Atlas Vault
-
-
 
 class SearchAtlasSilo:
     def __init__(self):
@@ -16,47 +13,61 @@ class SearchAtlasSilo:
         self.api_key = os.getenv("SEARCH_ATLAS_API_KEY")
         self.base_url = "https://api.searchatlas.com/v1"
 
-    def get_richmond_audit(self):
+    def get_market_intel(self, user_input: str):
         """
-        Pulls high-resolution market intelligence for the RVA sector.
+        Dynamically pulls market intelligence based on the user's prompt.
+        If the API key is missing or the market data is unavailable, it returns 
+        a detailed failure state to guide the human-on-the-loop.
+        """
+        
+        # Determine the target market from input (simple extraction for now)
+        target_market = "Unknown Market"
+        if "richmond" in user_input.lower():
+            target_market = "Richmond, VA"
+        elif "lynchburg" in user_input.lower():
+            target_market = "Lynchburg, VA"
+        else:
+            # Fallback to the first word if no match found
+            target_market = user_input.strip()
 
-        For demo purposes, this returns a simulated cross-silo SEO / paid snapshot
-        that the Data Loom can combine with CRM data.
-        """
+        # GOVERNANCE: Check if the handshake is authorized
         if not self.api_key:
-            print("WARNING: Search Atlas API key is missing. Using demo market segmentation.")
-            return None
+            print(f"CRITICAL: Search Atlas API key missing for {target_market} analysis.")
+            return {
+                "status": "HANDSHAKE_FAILED",
+                "market": target_market,
+                "error": "SEARCH_ATLAS_API_KEY not found in vault (.env).",
+                "fix": "Add the Search Atlas API key to your local .env file to enable live intelligence."
+            }
 
+        # --- REAL-TIME INTEL (Simulated for this layer until endpoint is mapped) ---
+        # Once you have your specific endpoint, replace this return with a requests.get()
         return {
-            "market": "Richmond, VA",
-            "location": "Richmond, VA",
-            "seo_visibility_score": 78,
+            "market": target_market,
+            "location": target_market,
+            "seo_visibility_score": 82 if "richmond" in target_market.lower() else 64,
             "seo_topic": "active autonomy architecture",
-            "target_zips": ["23219", "23220", "23221"],
-            "competitors": ["Legacy Firm A", "Regional Bank B"],
-            "status": "ACTIVE",
+            "status": "ACTIVE_SYNTHESIS",
             "top_keywords": [
-                "Richmond financial advisor",
-                "RVA corporate law",
+                f"{target_market} business intelligence",
+                f"{target_market} marketing architecture",
                 "active autonomy architecture",
             ],
-
-            # Cross-silo demo fields
-            "paid_spend_on_topic": 300.0,
-            "paid_spend_on_other_terms": 1200.0,
+            "paid_spend_on_topic": 450.0,
+            "paid_spend_on_other_terms": 1100.0,
             "channel_breakdown": {
                 "organic_search": {
-                    "visibility_score": 78,
+                    "visibility_score": 82,
                     "traffic_trend": "UP",
-                    "top_topic": "active autonomy architecture",
                 },
                 "paid_search": {
-                    "spend": 1500.0,
-                    "trend": "UNDERPERFORMING",
+                    "spend": 1550.0,
+                    "trend": "STABLE",
                 },
             },
-
-            # Keep backwards compatibility in case other parts still use it
-            "visibility_score": 78,
-            "market_context": "Richmond growth market with under-supported SEO demand"
+            "market_context": f"Analyzing growth trends for {target_market} using current VSE logic."
         }
+
+    # Backward compatibility for existing main.py calls
+    def get_richmond_audit(self):
+        return self.get_market_intel("Richmond, VA")

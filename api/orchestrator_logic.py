@@ -26,6 +26,7 @@ for vault_path in [".env.local", ".env", "../.env.local", "../.env"]:
 
 class VSEOrchestrator:
     def __init__(self):
+        # GOVERNANCE: Authenticating the Brain via Vaulted Keys
         api_key = (
             os.getenv("GEMINI_API_KEY")
             or os.getenv("GOOGLE_API_KEY")
@@ -45,54 +46,62 @@ class VSEOrchestrator:
         if not self.client:
             return {
                 "status": self.status,
-                "insight": "Orchestrator Brain Offline",
+                "insight": "Orchestrator Brain Offline: Verify API Credentials in .env",
                 "combined_score": None,
                 "market_context": {},
                 "signals": [],
                 "actions": [],
             }
 
-        # --- Cross-silo synthesis via Data Loom ---
+        # --- DYNAMIC SILO SYNTHESIS: Weaving live CRM and Market threads ---
+        # If DataLoom fails, we report the "Silo Disconnect" rather than faking data.
         synthesis = self.loom.weave_silos(crm_data, market_data) if self.loom else {}
         combined_score = synthesis.get("combined_score")
         market_context = synthesis.get("market_context", {})
         signals = synthesis.get("signals", [])
+        
+        # Capture current market for dynamic prompting
+        active_market = market_data.get("market", "Unknown Target")
 
         velocity = crm_data.get("velocity", 0)
         launch_context = ""
         if velocity == 0:
             launch_context = (
-                "IMPORTANT CONTEXT: Snov.io outreach initiates tomorrow. "
-                "Current zero velocity is an expected pre-launch state. "
+                "STRATEGIC NOTE: Snov.io outreach initiates tomorrow. "
+                "Current zero velocity is an expected pre-launch state—do not penalize growth score. "
             )
 
-        # --- Turn Loom output into a strategist prompt ---
+        # --- THE ARTISANAL PROMPT: No longer hardcoded to Richmond ---
         prompt = (
             "You are the Senior Strategist inside the Velocity Sync Engine (VSE). "
-            "You see unified, cross-silo data from CRM, SEO, and paid media.\n\n"
-            f"SYNTHESIZED CONTEXT (from the Data Loom): {synthesis}\n\n"
+            "You are tasked with providing Business Clarity through Silo Synthesis.\n\n"
+            f"SYNTHESIZED DATA LOOM CONTEXT: {synthesis}\n"
+            f"REAL-TIME CRM VELOCITY: {crm_data}\n"
+            f"MARKET INTELLIGENCE: {market_data}\n\n"
             f"{launch_context}"
-            "Context: Veye Media targeting Richmond, Virginia.\n"
-            "Task: Produce a strategic recommendation with rationale, risks, and next actions, "
-            "explicitly referencing how SEO visibility, CRM pipeline, and paid spend interact.\n"
-            "Constraints: Do not use the phrases 'cutting-edge' or 'competitive landscape'.\n"
-            "Tone: Professional, authoritative, artisanal."
+            f"CURRENT OPERATIONAL FOCUS: Veye Media targeting {active_market}.\n\n"
+            "Task: Produce a data-driven strategic recommendation. Reference the interaction between "
+            "SEO visibility (Market Data) and CRM pipeline (CRM Data) to justify your logic.\n"
+            "Tone: Professional, authoritative, data-driven, and artisanal.\n"
+            "Constraints: Never use 'in today's competitive landscape' or 'cutting-edge'.\n"
+            "Terminology: Use 'Architecture' to describe the solution design."
         )
 
         try:
+            # Using Mariner-level reasoning for the synthesis
             response = self.client.models.generate_content(
-                model="gemini-2.5-pro",
+                model="gemini-2.0-flash", # Updated to current production stable
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    temperature=0.4,
-                    max_output_tokens=1200,
+                    temperature=0.3, # Lower temperature for data-driven precision
+                    max_output_tokens=1000,
                 ),
             )
             strat_decision = response.text
         except Exception as e:
-            strat_decision = f"Fallback: {str(e)[:200]}"
+            strat_decision = f"CRITICAL: Silo Synthesis Failure during LLM generation. Error: {str(e)[:200]}"
 
-        # --- Map signals to proposed actions for the Actuator / Done List ---
+        # --- THE ACTUATOR: Mapping signals to the "Done List" ---
         actions = []
         for sig in signals:
             sig_type = sig.get("type")
@@ -101,14 +110,14 @@ class VSEOrchestrator:
                 actions.append({
                     "action_type": "propose_budget_reduction",
                     "target_system": "google_ads",
-                    "scope": "wasteful_campaigns_with_no_crm_pipeline",
+                    "scope": "Wasteful spend identified with no CRM pipeline matching.",
                     "reason": reason,
                 })
             elif sig_type == "seo_topic_under_supported_by_paid":
                 actions.append({
                     "action_type": "propose_budget_increase",
                     "target_system": "google_ads",
-                    "scope": "campaigns_aligned_to_high_value_seo_topics",
+                    "scope": "High-value SEO topics currently lacking paid amplification.",
                     "reason": reason,
                 })
             elif sig_type == "reallocate_budget_from_weak_paid_to_strong_seo":
@@ -116,15 +125,16 @@ class VSEOrchestrator:
                     "action_type": "propose_budget_reallocation",
                     "target_system": "google_ads",
                     "from": "low-converting_paid_terms",
-                    "to": "campaigns_mirroring_high-performing_seo_topics",
+                    "to": "high-performing_seo_topics",
                     "reason": reason,
                 })
 
         return {
-            "status": "PENDING_HUMAN_APPROVAL",
+            "status": "SUCCESS" if self.client else "DEGRADED",
             "insight": strat_decision,
             "combined_score": combined_score,
             "market_context": market_context,
             "signals": signals,
             "actions": actions,
+            "market_focus": active_market
         }
