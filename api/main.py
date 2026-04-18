@@ -20,6 +20,12 @@ except Exception as e:
 app = Flask(__name__)
 CORS(app) # CRITICAL: This allows the Frontend to talk to the Backend
 
+# NGROK BYPASS: Inject header to skip the browser warning page
+@app.after_request
+def add_header(response):
+    response.headers['ngrok-skip-browser-warning'] = 'true'
+    return response
+
 class VSEActuator:
     def __init__(self):
         if 'VSEOrchestrator' not in globals() or 'SearchAtlasSilo' not in globals():

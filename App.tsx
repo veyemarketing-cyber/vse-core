@@ -31,7 +31,7 @@ const App: React.FC = () => {
     setLoading(true);
     addLog("ORCHESTRATOR: Engaging strategic synthesis...");
     try {
-            const res = await fetch('https://womanlike-olive-barge.ngrok-free.dev', {
+          const res = await fetch('https://womanlike-olive-barge.ngrok-free.dev/api/main', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: syncInput })
